@@ -63,12 +63,12 @@ ORDER BY person_main.name ASC
 --listing first names and the number of occurances of first names. A first name is taken to
 --mean the first word appearing the name column. The most popular first name must be listed
 --first, and the list must exclude any first name that appears only once.
-SELECT SUBSTRING(name FROM '[A-Za-z]+') AS first_name,
+SELECT SUBSTRING(name FROM '[A-Za-z]+') AS name,
        COUNT(SUBSTRING(name FROM '[A-Za-z]+')) AS popularity
 FROM person
-GROUP BY first_name
+GROUP BY SUBSTRING(name FROM '[A-Za-z]+')
 HAVING COUNT(SUBSTRING(name FROM '[A-Za-z]+')) > 1
-ORDER BY popularity, fname DESC
+ORDER BY popularity DESC ,name
 ;
 
 -- Q6 returns (name,forties,fifties,sixties)
@@ -76,6 +76,18 @@ ORDER BY popularity, fname DESC
 --listing one row for each person in the database whom has had at least two children, and for
 --each such person, gives three columns forties, fifties and sixties containing the number of that
 --person’s children born in those 20th century decades.
+SELECT person_pearents.name,
+       COUNT(CASE WHEN person_children.dob >= '1940-1-1' AND person_children.dob <= '1949-12-31' THEN person_children.name ELSE NULL END) AS forties,
+       COUNT(CASE WHEN person_children.dob >= '1950-1-1' AND person_children.dob <= '1959-12-31' THEN person_children.name ELSE NULL END) AS fifties,
+       COUNT(CASE WHEN person_children.dob >= '1960-1-1' AND person_children.dob <= '1969-12-31' THEN person_children.name ELSE NULL END) AS sixties
+FROM person AS person_pearents,
+     person AS person_children
+WHERE person_children.father = person_pearents.name
+OR    person_children.mother =person_pearents.name
+GROUP BY person_pearents.name
+HAVING COUNT(person_children.father = person_pearents.name) >= 2
+OR COUNT(person_children.mother = person_pearents.name) >= 2
+
 ;
 
 
@@ -116,3 +128,5 @@ GROUP BY father,
 ORDER BY father,
          mother
 ;
+
+--psql -h db.doc.ic.ac.uk -d family_history -U lab -W -f db_2017_cw1.sql
